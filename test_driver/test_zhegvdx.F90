@@ -137,10 +137,6 @@ program main
   istat = cusolverDnCreate(h)
   if (istat /= CUSOLVER_STATUS_SUCCESS) write(*,*) 'handle creation failed'
 
-#ifdef HAVE_MAGMA
-  call magmaf_init
-#endif
-
 
   !! Solving generalized eigenproblem using ZHEGVD
   ! CASE 1: CPU _____________________________________________
@@ -152,8 +148,8 @@ program main
   allocate(iwork(liwork))
   allocate(rwork(lrwork))
   allocate(work(Lwork))
-  call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
-  if (istat /= 0) write(*,*) 'CPU zhegvd worksize failed'
+  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
+  !if (istat /= 0) write(*,*) 'CPU zhegvd worksize failed'
   lwork = work(1); lrwork = rwork(1); liwork = iwork(1)
   deallocate(work, rwork, iwork )
   allocate(work(lwork), rwork(lrwork), iwork(liwork))
@@ -161,78 +157,20 @@ program main
   A1 = Aref
   B1 = Bref
   ! Run once before timing
-  call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
-  if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
+  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
+  !if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
 
   A1 = Aref
   B1 = Bref
   ts = wallclock()
   call nvtxStartRange("CPU ZHEGVD",1)
-  call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
+  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
   call nvtxEndRange
   te = wallclock()
-  if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
+  !if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
 
-  print*, "\tTime for CPU zhegvd = ", (te - ts)*1000.0
-  print*
-
-#ifdef HAVE_MAGMA
-  ! CASE 2: using Magma ___________________________________________
-  print*
-  print*, "MAGMA_____________________"
-  call magmaf_zhegvd(1, 'V', 'U', N, A2, lda, B2, lda, w2, work, -1, rwork, -1, iwork, -1, istat)
-  if (istat /= 0) write(*,*) 'magmaf_zhegvd buffer sizes failed',istat
-  deallocate(work, rwork, iwork)
-  allocate(work(lwork), rwork(lrwork), iwork(liwork))
-
-  ts = wallclock()
-  call nvtxStartRange("MAGMA",0)
-  call magmaf_zhegvd(1, 'V', 'U', N, A2, lda, B2, lda, w2, work, lwork, rwork, lrwork, iwork, liwork, istat)
-  call nvtxEndRange
-  te = wallclock()
-  if (istat /= 0) write(*,*) 'magmaf_zhegvd failed',istat
-
-  print*, "evalues/evector accuracy: (compared to CPU results)"
-  call compare(w1, w2, N)
-  call compare(A1, A2, N, N)
-  print*
-
-  print*, "Time for magmaf_zhegvd = ", (te - ts)*1000.0
-  print*
-#endif
-
-
-  ! CASE 3: using Cusolver __________________________________________________________________
+  !print*, "\tTime for CPU zhegvd = ", (te - ts)*1000.0
   !print*
-  print*, "cuSOLVER_____________________"
-
-  istat = cusolverDnZhegvd_bufferSize(h, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER, N, A2_d, lda, B2_d, lda, w2_d, lwork_d)
-  if (istat /= CUSOLVER_STATUS_SUCCESS) write(*,*) 'cusolverDnZpotrf_buffersize failed'
-  allocate(work_d(lwork_d))
-  
-  A2 = Aref
-  B2 = Bref
-  w2 = 0
-  A2_d = A2
-  B2_d = B2
-  w2_d = 0
-  ts = wallclock()
-  call nvtxStartRange("cuSOLVER",5)
-  istat = cusolverDnZhegvd(h, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER, N, A2_d, lda, B2_d, lda, w2_d, work_d, lwork_d, devInfo_d)
-  call nvtxEndRange
-  te = wallclock()
-
-  print*, "evalues/evector accuracy: (compared to CPU results)"
-  w2 = w2_d
-  A2 = A2_d
-  call compare(w1, w2, N)
-  call compare(A1, A2, N, N)
-  print*
-
-  print*, "Time for cusolverDnZhegvd = ", (te - ts)*1000.0
-  print*
-  istat = devInfo_d
-  if (istat /= CUSOLVER_STATUS_SUCCESS) write(*,*) 'cusolverDnZhegvd failed'
 
 
   ! CASE 4: using CUSTOM ____________________________________________________________________
@@ -266,10 +204,10 @@ program main
   call nvtxEndRange
   te = wallclock()
 
-  print*, "evalues/evector accuracy: (compared to CPU results)"
-  call compare(w1, w2, iu)
-  call compare(A1, Z2, N, iu)
-  print*
+  !print*, "evalues/evector accuracy: (compared to CPU results)"
+  !call compare(w1, w2, iu)
+  !call compare(A1, Z2, N, iu)
+  !print*
 
   print*, "Time for CUSTOM zhegvd/x = ", (te - ts)*1000.0
   if (istat /= 0) write(*,*) 'zhegvdx_gpu failed'

@@ -18,7 +18,7 @@ LIBS += -L${LAPACKROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_pgi_thread
 #LIBS += -L${MAGMAROOT}/lib -lmagma
 #OPTFLAGS += -DHAVE_MAGMA
 
-all: test_zhegvdx test_dsygvdx
+all: test_zhegvdx test_dsygvdx test_dsyevd test_zheevd
 
 test_zhegvdx: test_zhegvdx.F90 
 	pgcc -c wallclock.c
@@ -29,6 +29,16 @@ test_dsygvdx: test_dsygvdx.F90
 	pgcc -c wallclock.c
 	pgf90 -c ${FLAGS} toolbox.F90
 	pgf90 -o test_dsygvdx test_dsygvdx.F90 toolbox.o wallclock.o ${LIBS} ${FLAGS} ${OPTFLAGS} -pgf90libs ${INCS}
+
+test_dsyevd: test_dsyevd.F90 
+	pgcc -c wallclock.c
+	pgf90 -c ${FLAGS} toolbox.F90
+	pgf90 -o test_dsyevd test_dsyevd.F90 toolbox.o wallclock.o ${LIBS} ${FLAGS} ${OPTFLAGS} -pgf90libs ${INCS}
+	
+test_zheevd: test_zheevd.F90 
+	pgcc -c wallclock.c
+	pgf90 -c ${FLAGS} toolbox.F90
+	pgf90 -o test_zheevd test_zheevd.F90 toolbox.o wallclock.o ${LIBS} ${FLAGS} ${OPTFLAGS} -pgf90libs ${INCS}
 
 clean:
 	rm test_zhegvdx test_dsygvdx *.mod *.o

@@ -130,21 +130,17 @@ program main
   istat = cusolverDnCreate(h)
   if (istat /= CUSOLVER_STATUS_SUCCESS) write(*,*) 'handle creation failed'
 
-#ifdef HAVE_MAGMA
-  call magmaf_init
-#endif
-
 
   !! Solving generalized eigenproblem using DSYGVD
   ! CASE 1: CPU _____________________________________________
-  print*
-  print*, "CPU_____________________"
+  !print*
+  !print*, "CPU_____________________"
   lwork = 1 + 6*N + 2*N*N
   liwork = 3 + 5*N
   allocate(iwork(liwork))
   allocate(work(lwork))
   !call dsyevd('V', 'U', N, A1, lda, w1, work, -1, iwork, -1, istat)
-  if (istat /= 0) write(*,*) 'CPU dsyevd worksize failed'
+  !if (istat /= 0) write(*,*) 'CPU dsyevd worksize failed'
   lwork = work(1);; liwork = iwork(1)
   deallocate(work, iwork )
   allocate(work(lwork), iwork(liwork))

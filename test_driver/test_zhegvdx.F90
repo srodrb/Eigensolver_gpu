@@ -140,8 +140,8 @@ program main
 
   !! Solving generalized eigenproblem using ZHEGVD
   ! CASE 1: CPU _____________________________________________
-  print*
-  print*, "CPU_____________________"
+  !print*
+  !print*, "CPU_____________________"
   lwork = 2*N + N*N
   lrwork = 1 + 5*N + 2*N*N
   liwork = 3 + 5*N

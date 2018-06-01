@@ -142,14 +142,14 @@ program main
 
   !! Solving generalized eigenproblem using DSYGVD
   ! CASE 1: CPU _____________________________________________
-  print*
-  print*, "CPU_____________________"
+  !print*
+  !print*, "CPU_____________________"
   lwork = 1 + 6*N + 2*N*N
   liwork = 3 + 5*N
   allocate(iwork(liwork))
   allocate(work(lwork))
   !call dsygvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, iwork, -1, istat)
-  if (istat /= 0) write(*,*) 'CPU dsygvd worksize failed'
+  !if (istat /= 0) write(*,*) 'CPU dsygvd worksize failed'
   lwork = work(1);; liwork = iwork(1)
   deallocate(work, iwork )
   allocate(work(lwork), iwork(liwork))

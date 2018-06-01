@@ -8,7 +8,7 @@ LIBS = -Mcudalib=cublas,cusolver -L${CUDAROOT}/lib64 -lnvToolsExt
 LIBS += ../lib_eigsolve/lib_eigsolve.a
 
 # Populate this section for your LAPACK installation. Default here is for MKL.
-LAPACKROOT = /opt/mkl
+LAPACKROOT = ${MKLROOT}
 INCS += -I${LAPACKROOT}/include
 LIBS += -L${LAPACKROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_pgi_thread -pgf90libs -lpthread -lm -ldl
 

@@ -139,8 +139,8 @@ program main
 
   !! Solving generalized eigenproblem using DSYGVD
   ! CASE 1: CPU _____________________________________________
-  print*
-  print*, "CPU_____________________"
+  !print*
+  !print*, "CPU_____________________"
   lwork = 2*N + N*N
   lrwork = 1 + 5*N + 2*N*N
   liwork = 3 + 5*N
@@ -148,8 +148,7 @@ program main
   !allocate(rwork(lrwork))
   !allocate(work(lwork))
   !call zheevd('V', 'U', N, A1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
-  print*, "allocation of work worked!"
-  if (istat /= 0) write(*,*) 'CPU zheevd worksize failed'
+  !if (istat /= 0) write(*,*) 'CPU zheevd worksize failed'
   !lwork = work(1);; liwork = iwork(1);; lrwork = rwork(1);
   !deallocate(iwork, rwork, work)
   allocate(iwork(liwork), rwork(lrwork), work(lwork) )

@@ -1,4 +1,4 @@
-CUDAROOT = /usr/local/cuda
+CUDAROOT = /usr/local/cuda-9.2
 
 # Flags for GPUs with Volta architecture.  Modify cc value as required.
 FLAGS = -O3 -mp -pgf90libs -Mcuda=cc70,cuda9.1 -Mlarge_arrays
@@ -8,9 +8,10 @@ LIBS = -Mcudalib=cublas,cusolver -L${CUDAROOT}/lib64 -lnvToolsExt
 LIBS += ../lib_eigsolve/lib_eigsolve.a
 
 # Populate this section for your LAPACK installation. Default here is for MKL.
-LAPACKROOT = ${MKLROOT}
-INCS += -I${LAPACKROOT}/include
-LIBS += -L${LAPACKROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_pgi_thread -pgf90libs -lpthread -lm -ldl
+INCS += -I${INTELHOME}/compiler/include -I${MKLROOT}/include
+LIBS += -L${INTELHOME}/compiler/lib/intel64 -liomp5  -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -pgf90libs -lpthread -lm -ldl
+#LIBS += -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -pgf90libs -lpthread -lm -ldl
+# LIBS += -L${LAPACKROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_pgi_thread -pgf90libs -lpthread -lm -ldl
 
 # To enable comparison with MAGMA, uncomment and/or populate the following lines:
 #MAGMAROOT = 
@@ -41,4 +42,4 @@ test_zheevd: test_zheevd.F90
 	pgf90 -o test_zheevd test_zheevd.F90 toolbox.o wallclock.o ${LIBS} ${FLAGS} ${OPTFLAGS} -pgf90libs ${INCS}
 
 clean:
-	rm test_zhegvdx test_dsygvdx *.mod *.o
+	rm test_dsyevd test_zheevd test_zhegvdx test_dsygvdx *.mod *.o

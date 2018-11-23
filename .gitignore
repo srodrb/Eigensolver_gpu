@@ -1,0 +1,3 @@
+*.o
+*.csv
+*/nvtx_files/

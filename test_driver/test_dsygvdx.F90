@@ -194,10 +194,10 @@ program main
   allocate(work_d(1*lwork_d))
 
   ts = wallclock()
-  call nvtxStartRange("Custom",0)
+  !call nvtxStartRange("Custom",0)
   call dsygvdx_gpu(N, A2_d, lda, B2_d, lda, Z2_d, lda, il, iu, w2_d, work_d, lwork_d, &
                           work, lwork, iwork, liwork, Z2, lda, w2, istat)
-  call nvtxEndRange
+  !call nvtxEndRange
   te = wallclock()
 
   !print*, "evalues/evector accuracy: (compared to CPU results)"

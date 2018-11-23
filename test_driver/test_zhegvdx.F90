@@ -148,8 +148,8 @@ program main
   allocate(iwork(liwork))
   allocate(rwork(lrwork))
   allocate(work(Lwork))
-  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
-  !if (istat /= 0) write(*,*) 'CPU zhegvd worksize failed'
+  call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
+  if (istat /= 0) write(*,*) 'CPU zhegvd worksize failed'
   lwork = work(1); lrwork = rwork(1); liwork = iwork(1)
   deallocate(work, rwork, iwork )
   allocate(work(lwork), rwork(lrwork), iwork(liwork))
@@ -163,9 +163,9 @@ program main
   A1 = Aref
   B1 = Bref
   ts = wallclock()
-  call nvtxStartRange("CPU ZHEGVD",1)
+  !call nvtxStartRange("CPU ZHEGVD",1)
   !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
-  call nvtxEndRange
+  !call nvtxEndRange
   te = wallclock()
   !if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
 
@@ -198,10 +198,10 @@ program main
   allocate(rwork_d(1*lrwork_d))
 
   ts = wallclock()
-  call nvtxStartRange("Custom",0)
+  !call nvtxStartRange("Custom",0)
   call zhegvdx_gpu(N, A2_d, lda, B2_d, lda, Z2_d, lda, il, iu, w2_d, work_d, lwork_d, rwork_d, lrwork_d, &
                           work, lwork, rwork, lrwork, iwork, liwork, Z2, lda, w2, istat)
-  call nvtxEndRange
+  !call nvtxEndRange
   te = wallclock()
 
   !print*, "evalues/evector accuracy: (compared to CPU results)"

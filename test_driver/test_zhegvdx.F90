@@ -183,7 +183,9 @@ program main
   B2_d = B2
   w2_d = w2
   il = 1
-  iu = N
+  ! Samuel : modified to match Quantum Expresso use cases.
+  ! iu = N
+  iu = 800
 
   deallocate(work, rwork, iwork)
   lwork = N

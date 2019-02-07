@@ -1,10 +1,10 @@
-CUDAROOT = /usr/local/cuda-9.2
+#CUDAROOT = /usr/local/cuda-9.2
 
 # Flags for GPUs with Volta architecture.  Modify cc value as required.
-FLAGS = -O3 -mp -pgf90libs -Mcuda=cc70,cuda9.1 -Mlarge_arrays
+FLAGS = -O3 -mp -pgf90libs -Mcuda=cc70,cuda10.0 -Mlarge_arrays
 
 INCS = -I../lib_eigsolve 
-LIBS = -Mcudalib=cublas,cusolver -L${CUDAROOT}/lib64 -lnvToolsExt
+LIBS = -Mcudalib=cublas,cusolver -L${CUDAHOME}/lib64 -lnvToolsExt
 LIBS += ../lib_eigsolve/lib_eigsolve.a
 
 # Populate this section for your LAPACK installation. Default here is for MKL.

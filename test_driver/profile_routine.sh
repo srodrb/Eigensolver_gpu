@@ -2,11 +2,11 @@
 
 # Binary options: cudenseTest cudenseTest_static
 BINARY="./test_zhegvdx"
-M_DIMENSION="128 256 512 1000 2000 3000 4000 5000 6000 7000"
+M_DIMENSION="800 1000 2000 3000 4000 5000 6000 7000"
 ITERS="1 2 3 4 5"
 PROFILER="/usr/local/cuda-10.0/bin/nvprof"
 
-export MKL_NUM_THREADS="1"
+export MKL_NUM_THREADS="4"
 export MKL_DYNAMIC="FALSE"
 export OMP_NUM_THREADS=1
 

@@ -1,9 +1,9 @@
 # Flags for GPUs with Volta architecture. Change cc70 to cc60 if compiling for Pascal.
-FLAGS = -O3 -pgf90libs -Mcuda=cc70,cuda9.1,ptxinfo -Mlarge_arrays
-FLAGS2 = -O3 -pgf90libs -Mcuda=cc70,cuda9.1,ptxinfo,maxregcount:64 -Mlarge_arrays
+FLAGS = -O3 -pgf90libs -Mcuda=cc70,cuda10.0,ptxinfo -Mlarge_arrays
+FLAGS2 = -O3 -pgf90libs -Mcuda=cc70,cuda10.0,ptxinfo,maxregcount:64 -Mlarge_arrays
 
 # For performance reasons, some files are compiled with cc60, even on Volta. Do not update the cc value in FLAGS3! 
-FLAGS3 = -O3 -mp -pgf90libs -Mcuda=cc60,cuda9.1,ptxinfo,nordc,maxregcount:255  -Mlarge_arrays
+FLAGS3 = -O3 -mp -pgf90libs -Mcuda=cc60,cuda10.0,ptxinfo,nordc,maxregcount:255  -Mlarge_arrays
 
 # Uncomment to enable NVTX markers
 # OPTFLAGS = -DUSE_NVTX

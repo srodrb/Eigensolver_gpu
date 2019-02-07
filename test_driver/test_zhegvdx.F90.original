@@ -183,7 +183,7 @@ program main
   B2_d = B2
   w2_d = w2
   il = 1
-  iu = 800
+  iu = N
 
   deallocate(work, rwork, iwork)
   lwork = N

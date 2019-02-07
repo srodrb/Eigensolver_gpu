@@ -24,27 +24,25 @@
 module funcs
   contains
 
-  ! Creates pseudo-random positive-definite hermetian matrix
-  subroutine create_random_hermetian_pd(A, N)
+  ! Creates pseudo-random positive-definite symmetric matrix
+  subroutine create_random_symmetric_pd(A, N)
     use cudafor
     use cublas
-    complex(8), allocatable, dimension(:,:)         :: A, temp
-    complex(8), allocatable, dimension(:,:), device :: A_d, temp_d
-    complex(8)                                      :: val
-    real(8)                                         :: rv, iv
+    real(8), allocatable, dimension(:,:)         :: A, temp
+    real(8), allocatable, dimension(:,:), device :: A_d, temp_d
+    real(8)                                         :: rv
     integer                                         :: i, j, N
 
     allocate(A(N,N))
     allocate(temp(N,N))
 
-    ! Create general hermetian temp
+    ! Create general symmetric temp
     do j = 1, N
       do i = 1, N
         if (i > j) then
           call random_number(rv)
-          call random_number(iv)
-          temp(i,j) = cmplx(rv, iv, 8)
-          temp(j,i) = conjg(temp(i,j))
+          temp(i,j) = rv
+          temp(j,i) = rv
         else if (i == j) then
           call random_number(rv)
           temp(i,j) = rv
@@ -55,8 +53,8 @@ module funcs
     allocate(A_d, source = A)
     allocate(temp_d, source = temp)
 
-    ! Multiply temp by conjugate transpose of temp to get positive definite hermetian A
-    call cublaszgemm('N', 'C', N, N, N, cmplx(1.0, 0.0, 8), temp_d, N, temp_d, N, cmplx(0.0, 0.0, 8), A_d, N)
+    ! Multiply temp by transpose of temp to get positive definite A
+    call cublasdgemm('N', 'T', N, N, N, 1.d0, temp_d, N, temp_d, N, 0.d0, A_d, N)
 
     A = A_d
     deallocate(temp)
@@ -71,7 +69,7 @@ program main
   use cublas
   use cusolverDn
   use eigsolve_vars, ONLY: init_eigsolve_gpu
-  use zhegvdx_gpu
+  use dsygvdx_gpu
   use nvtx_inters
   use funcs
   use compare_utils
@@ -81,14 +79,14 @@ program main
   integer                                         :: lwork_d, lrwork_d, lwork, lrwork, liwork, il, iu
   character(len=20)                               :: arg
   real(8)                                         :: ts, te, wallclock
-  complex(8), dimension(:,:), allocatable         :: A1, A2, Aref
-  complex(8), dimension(:,:), allocatable         :: B1, B2, Bref
-  complex(8), dimension(:,:), allocatable, pinned :: Z1, Z2
-  complex(8), dimension(:,:), allocatable, device :: A2_d, B2_d, Z2_d
-  complex(8), dimension(:), allocatable, pinned   :: work
+  real(8), dimension(:,:), allocatable            :: A1, A2, Aref
+  real(8), dimension(:,:), allocatable            :: B1, B2, Bref
+  real(8), dimension(:,:), allocatable, pinned    :: Z1, Z2
+  real(8), dimension(:,:), allocatable, device    :: A2_d, B2_d, Z2_d
+  real(8), dimension(:), allocatable, pinned      :: work
   real(8), dimension(:), allocatable, pinned      :: w1, w2, rwork
   integer, dimension(:), allocatable, pinned      :: iwork
-  complex(8), dimension(:), allocatable, device   :: work_d
+  real(8), dimension(:), allocatable, device      :: work_d
   real(8), dimension(:), allocatable, device      :: w2_d, rwork_d
   integer, device                                 :: devInfo_d
   type(cusolverDnHandle)                          :: h
@@ -97,15 +95,15 @@ program main
   i = command_argument_count()
 
   if (i >= 1) then
-    ! If N is provided, generate random hermetian matrices for A and B
+    ! If N is provided, generate random symmetric matrices for A and B
     print*, "Using randomly-generated matrices..."
     call get_command_argument(1, arg)
     read(arg, *)  N
     lda = N
 
     ! Create random positive-definite hermetian matrices on host
-    call create_random_hermetian_pd(Aref, N)
-    call create_random_hermetian_pd(Bref, N)
+    call create_random_symmetric_pd(Aref, N)
+    call create_random_symmetric_pd(Bref, N)
 
   else
     print*, "Usage:\n\t ./main [N]"
@@ -137,41 +135,42 @@ program main
   istat = cusolverDnCreate(h)
   if (istat /= CUSOLVER_STATUS_SUCCESS) write(*,*) 'handle creation failed'
 
+#ifdef HAVE_MAGMA
+  call magmaf_init
+#endif
 
-  !! Solving generalized eigenproblem using ZHEGVD
+
+  !! Solving generalized eigenproblem using DSYGVD
   ! CASE 1: CPU _____________________________________________
   !print*
   !print*, "CPU_____________________"
-  lwork = 2*N + N*N
-  lrwork = 1 + 5*N + 2*N*N
+  lwork = 1 + 6*N + 2*N*N
   liwork = 3 + 5*N
   allocate(iwork(liwork))
-  allocate(rwork(lrwork))
-  allocate(work(Lwork))
-  call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, rwork, -1, iwork, -1, istat)
-  if (istat /= 0) write(*,*) 'CPU zhegvd worksize failed'
-  lwork = work(1); lrwork = rwork(1); liwork = iwork(1)
-  deallocate(work, rwork, iwork )
-  allocate(work(lwork), rwork(lrwork), iwork(liwork))
+  allocate(work(lwork))
+  !call dsygvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, -1, iwork, -1, istat)
+  !if (istat /= 0) write(*,*) 'CPU dsygvd worksize failed'
+  lwork = work(1);; liwork = iwork(1)
+  deallocate(work, iwork )
+  allocate(work(lwork), iwork(liwork))
 
   A1 = Aref
   B1 = Bref
   ! Run once before timing
-  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
-  !if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
+  ! call dsygvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, iwork, liwork, istat)
+  !if (istat /= 0) write(*,*) 'CPU dsygvd failed. istat = ', istat
 
   A1 = Aref
   B1 = Bref
   ts = wallclock()
-  !call nvtxStartRange("CPU ZHEGVD",1)
-  !call zhegvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, rwork, lrwork, iwork, liwork, istat)
-  !call nvtxEndRange
+  call nvtxStartRange("CPU DSYGVD",1)
+  !call dsygvd(1, 'V', 'U', N, A1, lda, B1, lda, w1, work, lwork, iwork, liwork, istat)
+  call nvtxEndRange
   te = wallclock()
-  !if (istat /= 0) write(*,*) 'CPU zhegvd failed. istat = ', istat
+  !if (istat /= 0) write(*,*) 'CPU dsygvd failed. istat = ', istat
 
-  !print*, "\tTime for CPU zhegvd = ", (te - ts)*1000.0
+  !print*, "\tTime for CPU dsygvd = ", (te - ts)*1000.0
   !print*
-
 
   ! CASE 4: using CUSTOM ____________________________________________________________________
   print*
@@ -183,24 +182,21 @@ program main
   B2_d = B2
   w2_d = w2
   il = 1
-  iu = 800
+  iu = N
 
-  deallocate(work, rwork, iwork)
-  lwork = N
-  lrwork = 1+5*N+2*N*N
+  deallocate(work, iwork)
+  lwork = 1+6*N+2*N*N
   liwork = 3+5*N
-  allocate(work(lwork), rwork(lrwork), iwork(liwork))
+  allocate(work(lwork), iwork(liwork))
 
   deallocate(work_d)
-  lwork_d = 2*64*64 + 65 * N
-  lrwork_d = N
+  lwork_d = 2*64*64 + 66 * N
   allocate(work_d(1*lwork_d))
-  allocate(rwork_d(1*lrwork_d))
 
   ts = wallclock()
   !call nvtxStartRange("Custom",0)
-  call zhegvdx_gpu(N, A2_d, lda, B2_d, lda, Z2_d, lda, il, iu, w2_d, work_d, lwork_d, rwork_d, lrwork_d, &
-                          work, lwork, rwork, lrwork, iwork, liwork, Z2, lda, w2, istat)
+  call dsygvdx_gpu(N, A2_d, lda, B2_d, lda, Z2_d, lda, il, iu, w2_d, work_d, lwork_d, &
+                          work, lwork, iwork, liwork, Z2, lda, w2, istat)
   !call nvtxEndRange
   te = wallclock()
 
@@ -209,7 +205,7 @@ program main
   !call compare(A1, Z2, N, iu)
   !print*
 
-  print*, "Time for CUSTOM zhegvd/x = ", (te - ts)*1000.0
-  if (istat /= 0) write(*,*) 'zhegvdx_gpu failed'
+  print*, "Time for CUSTOM dsygvd/x = ", (te - ts)*1000.0
+  if (istat /= 0) write(*,*) 'dsygvdx_gpu failed'
 
 end program
